@@ -2,7 +2,7 @@ import requests
 
 from keys import API_KEY, summoner_names
 
-test = False
+test_get_summ_id = True
 
 base_url = 'https://na.api.pvp.net/api/lol/na/'
 url_key = {'api_key' : API_KEY}
@@ -36,10 +36,11 @@ def get_recent_matches(summoner_id):
 
 def add_to_db(match_result):
     """Adds MatchResult to database"""
+    pass
 
 
 if __name__ == '__main__':
-    if test:
+    if test_get_summ_id:
         ids = get_summ_id(summoner_names)
         with open('team.csv', 'w') as team:
             for name in ids:
