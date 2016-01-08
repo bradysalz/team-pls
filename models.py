@@ -54,4 +54,3 @@ class MatchResult(db.Model):
         summoner = 'N/A' if self.summoner == '' else self.summoner
         match = 'N/A' if self.match == 0 else self.match
         return '<Match {0} was {1} by Player {2}>'.format(match, won, summoner)
-

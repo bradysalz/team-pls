@@ -66,16 +66,15 @@ def parse_match_to_db(game, summ_id):
     mode = game['subType']
 
     stats = game['stats']
-    win_game = stats.get('win',0)
-    kills = stats.get('championsKilled',0)
-    deaths = stats.get('numDeaths',0)
-    assists = stats.get('assists',0)
-    damage = stats.get('totalDamageDealtToChampions',0)
-    gold = stats.get('goldEarned',0)
-    wards = stats.get('wardPlaced',0)
-    lane = stats.get('playerPosition',0)
-    role = stats.get('playerRole',0)
-
+    win_game = stats.get('win', 0)
+    kills = stats.get('championsKilled', 0)
+    deaths = stats.get('numDeaths', 0)
+    assists = stats.get('assists', 0)
+    damage = stats.get('totalDamageDealtToChampions', 0)
+    gold = stats.get('goldEarned', 0)
+    wards = stats.get('wardPlaced', 0)
+    lane = stats.get('playerPosition', 0)
+    role = stats.get('playerRole', 0)
 
     return MatchResult(date, match, summoner, mode, win_game,
                        kills, deaths, assists, damage, gold,
