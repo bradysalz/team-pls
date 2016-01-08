@@ -1,15 +1,19 @@
 import requests
+import datetime
+import time
 
-from keys import API_KEY, summoner_names
+from keys import API_KEY, summoner_names, id_lookup
 from models import MatchResult
+from teampls import db
 
 test_get_summ_id = False
+test_get_recent_matches = True
 
 base_url = 'https://na.api.pvp.net/api/lol/na/'
-url_key = {'api_key' : API_KEY}
+url_key = {'api_key': API_KEY}
 
 
-def get_summ_id(summoner_names):
+def get_summ_id(sum_names):
     """Turns summoner names into summoner ids
     Expects summoner_names as a dictionary {'Real Name' : 'Summoner Name'}
     Returns ids as a dictionary {'Real Name' : 'id'}
@@ -17,14 +21,14 @@ def get_summ_id(summoner_names):
     get_summoner_name_url = 'v1.4/summoner/by-name/'
 
     sum_ids = {}
-    for name in summoner_names:
-        curr_url = base_url + get_summoner_name_url + summoner_names[name].lower()
+    for name in sum_names:
+        curr_url = base_url + get_summoner_name_url + sum_names[name].lower()
         req = requests.get(curr_url, params=url_key)
         # print curr_url
 
         if req.status_code == 200:
             req = req.json()
-            sum_ids[name] = req[summoner_names[name]]['id']
+            sum_ids[name] = req[sum_names[name]]['id']
 
     return sum_ids
 
@@ -47,25 +51,89 @@ def check_recent_matches(summoner_id):
 
     games = data['games']
     for game in games:
-        if MatchResult.query.filter_by(match=game['gameId']).first() is None:
-            add_to_db(game)
+        # if not already in database, add to database
+        game_exists = MatchResult.query.filter_by(match=game['gameId'], summoner=id_lookup[float(summoner_id)])
+        if game_exists.first() is None:
+            add_to_db(game, data['summonerId'])
 
 
-def parse_match_to_row(match):
-    """Turns JSON match object into database object
+def parse_match_to_db(game, summ_id):
+    """Turns JSON match data into database object
     """
-    pass
+    date = datetime.datetime.fromtimestamp(float(game['createDate'])/1000.)
+    match = game['gameId']
+    summoner = id_lookup[summ_id].lower()
+    mode = game['subType']
+
+    stats = game['stats']
+    try:
+        win_game = stats['win']
+    except KeyError:
+        win_game = 0
+
+    try:
+        kills = stats['championsKilled']
+    except KeyError:
+        kills = 0
+
+    try:
+        deaths = stats['numDeaths']
+    except KeyError:
+        deaths = 0
+
+    try:
+        assists = stats['assists']
+    except KeyError:
+        assists = 0
+
+    try:
+        damage = stats['totalDamageDealtToChampions']
+    except KeyError:
+        damage = 0
+
+    try:
+        gold = stats['goldEarned']
+    except KeyError:
+        gold = 0
+
+    try:
+        wards = stats['wardPlaced']
+    except KeyError:
+        wards = 0
+
+    try:
+        lane = stats['playerPosition']
+    except KeyError:
+        lane = 0
+
+    try:
+        role = stats['playerRole']
+    except KeyError:
+        role = 0
+
+    return MatchResult(date, match, summoner, mode, win_game,
+                       kills, deaths, assists, damage, gold,
+                       wards, lane, role)
 
 
-def add_to_db(game_data):
+def add_to_db(game_data, summ_id):
     """Adds MatchResult to database"""
-    print 'Adding match {0}'.format(str(game_data['gameId']))
+    if type(game_data) != MatchResult:
+        game_data = parse_match_to_db(game_data, summ_id)
+
+    db.session.add(game_data)
+    db.session.commit()
+
+    print 'Added match {0}'.format(str(game_data.match))
 
 
 if __name__ == '__main__':
     print 'testing'
 
-    check_recent_matches(26658116)
+    if test_get_recent_matches:
+        for x in [169964, 19908711, 20294405, 26658116]:
+            check_recent_matches(x)
+            time.sleep(1)
 
     if test_get_summ_id:
         ids = get_summ_id(summoner_names)
