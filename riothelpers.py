@@ -66,50 +66,16 @@ def parse_match_to_db(game, summ_id):
     mode = game['subType']
 
     stats = game['stats']
-    try:
-        win_game = stats['win']
-    except KeyError:
-        win_game = 0
+    win_game = stats.get('win',0)
+    kills = stats.get('championsKilled',0)
+    deaths = stats.get('numDeaths',0)
+    assists = stats.get('assists',0)
+    damage = stats.get('totalDamageDealtToChampions',0)
+    gold = stats.get('goldEarned',0)
+    wards = stats.get('wardPlaced',0)
+    lane = stats.get('playerPosition',0)
+    role = stats.get('playerRole',0)
 
-    try:
-        kills = stats['championsKilled']
-    except KeyError:
-        kills = 0
-
-    try:
-        deaths = stats['numDeaths']
-    except KeyError:
-        deaths = 0
-
-    try:
-        assists = stats['assists']
-    except KeyError:
-        assists = 0
-
-    try:
-        damage = stats['totalDamageDealtToChampions']
-    except KeyError:
-        damage = 0
-
-    try:
-        gold = stats['goldEarned']
-    except KeyError:
-        gold = 0
-
-    try:
-        wards = stats['wardPlaced']
-    except KeyError:
-        wards = 0
-
-    try:
-        lane = stats['playerPosition']
-    except KeyError:
-        lane = 0
-
-    try:
-        role = stats['playerRole']
-    except KeyError:
-        role = 0
 
     return MatchResult(date, match, summoner, mode, win_game,
                        kills, deaths, assists, damage, gold,
