@@ -12,7 +12,7 @@ class MatchResult(db.Model):
     date = db.Column(db.DateTime)        # createDate
     match = db.Column(db.Integer)        # gameId
     summoner = db.Column(db.String(18))  # summoner name, all lowercase ('dahtguy')
-    mode = db.Column(db.String(25))      # gameMode (NORMAL, SOLO_5X5, etc)
+    mode = db.Column(db.String(25))      # subType (NORMAL, SOLO_5X5, etc)
 
     # game data
     win_game = db.Column(db.Boolean)  # win (True = Victory, False = Arnold)
