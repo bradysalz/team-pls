@@ -5,9 +5,18 @@
     <h1 align="center">
         TEAM?
     </h1>
-
-    <form method="POST" action="/">
-        <input type="submit" value="Go">
+    <form class="form-inline" method="POST" action="/">
+        <div class="dd_bs" align="center">
+            <select class="form-control input-lg" name="individual">
+                <option value="arnold">Arnold</option>
+                <option value="brady">Brady</option>
+                <option value="dennis">Dennis</option>
+                <option value="doug">Doug</option>
+            </select>
+        </div>
+        <div class="btn_next" align="center">
+            <input type="submit" class="btn btn-primary btn-lg" name="to_choose_team" value="NEXT" >
+        </div>
     </form>
 </div>
 {% endblock %}
