@@ -1,5 +1,6 @@
 import sys
 import csv
+import time
 
 from riothelpers import check_recent_matches
 
@@ -18,6 +19,7 @@ def fetch():
         for row in file_read:
             lookup.append(row[2])
 
+    print 'Cron ran at {0}'.format(strftime("%a, %d %b %Y %H:%M:%S +0000"))
     for id in lookup:
         check_recent_matches(id)
 
