@@ -10,8 +10,12 @@
 # Configs
 keys.py
 team.csv
+
+# database
 matches.db
 
+# logging
+team-pls-debug.log
 
 ## ST2 GITIGNORE ##
 # cache files for sublime text

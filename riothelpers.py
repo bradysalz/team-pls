@@ -1,16 +1,23 @@
 import requests
 import datetime
 import time
+import logging
 
 from keys import API_KEY, summoner_names, id_lookup
 from models import MatchResult
 from teampls import db
 
+# testing debug flags
 test_get_summ_id = False
 test_get_recent_matches = True
 
+# API keys
 base_url = 'https://na.api.pvp.net/api/lol/na/'
 url_key = {'api_key': API_KEY}
+
+# logging info
+logging.basicConfig(filename='team-pls-debug.log')
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
 def get_summ_id(sum_names):
@@ -24,7 +31,6 @@ def get_summ_id(sum_names):
     for name in sum_names:
         curr_url = base_url + get_summoner_name_url + sum_names[name].lower()
         req = requests.get(curr_url, params=url_key)
-        # print curr_url
 
         if req.status_code == 200:
             req = req.json()
@@ -89,16 +95,14 @@ def add_to_db(game_data, summ_id):
     db.session.add(game_data)
     db.session.commit()
 
-    print 'Added match {0}'.format(str(game_data.match))
+    logging.info('Added match {0}'.format(str(game_data.match)))
 
 
 if __name__ == '__main__':
-    print 'testing'
-
     if test_get_recent_matches:
         for x in [169964, 19908711, 20294405, 26658116]:
             check_recent_matches(x)
-            time.sleep(1)
+            time.sleep(5)
 
     if test_get_summ_id:
         ids = get_summ_id(summoner_names)
