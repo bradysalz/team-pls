@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class=page>
+    <div class="col-md-4"></div>
+    <div class="col-md-4">
+        <h1 align="center">
+            WHO IS TEAM?
+        </h1>
+        <form class="form-inline" method="POST" action="/not-team">
+            <div class="dd_bs">
+                {% for member in team %}
+                <div>
+                    <label>
+                        <input type="checkbox" value="{{ member }}" class="bigbox">
+                        {{ member.title() }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="btn_next" align="center">
+                <input type="submit" class="btn btn-primary btn-lg" name="to_choose_team" value="NEXT" >
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

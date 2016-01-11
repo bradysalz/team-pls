@@ -2,7 +2,17 @@ h1 {
     font-size: 72px;
 }
 
+.vert {
+    position: relative;
+    top: 50%;
+    transform: translateY(100%);
+}
 .dd_bs {
     margin: 20px;
+}
+
+.bigbox {
+    width: 20px;
+    height: 20px;
 }
 
