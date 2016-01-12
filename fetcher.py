@@ -19,7 +19,7 @@ def fetch():
         for row in file_read:
             lookup.append(row[2])
 
-    print 'Cron ran at {0}'.format(strftime("%a, %d %b %Y %H:%M:%S +0000"))
+    print 'Cron ran at {0}'.format(time.strftime("%a, %d %b %Y %H:%M:%S +0000"))
     for id in lookup:
         check_recent_matches(id)
 
