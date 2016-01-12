@@ -66,6 +66,7 @@ def check_recent_matches(summoner_id):
 def parse_match_to_db(game, summ_id):
     """Turns JSON match data into database object
     """
+
     date = datetime.datetime.fromtimestamp(float(game['createDate'])/1000.)
     match = game['gameId']
     summoner = id_lookup[summ_id].lower()

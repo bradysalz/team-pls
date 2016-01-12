@@ -3,9 +3,9 @@ h1 {
 }
 
 .vert {
-    position: relative;
-    top: 50%;
-    transform: translateY(100%);
+    /*position: relative;*/
+    /*top: 50%;*/
+    /*transform: translateY(100%);*/
 }
 .dd_bs {
     margin: 20px;

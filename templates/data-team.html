@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class=page>
+    <div class="vert">
+        <h1 align="center">
+            WHAT IS TEAM?
+        </h1>
+        <form class="form-inline" method="POST" action="/big-data">
+            <div class="dd_bs" align="center">
+                <label>
+                    <select class="form-control input-lg" name="top_data">
+                        <option value="wins">Wins</option>
+                        <option value="kills">Kills</option>
+                        <option value="deaths">Deaths</option>
+                        <option value="assists">Assists</option>
+                        <option value="kda">KDA</option>
+                        <option value="damage">Damage</option>
+                        <option value="gold">Gold</option>
+                        <option value="wards">Wards</option>
+                    </select>
+                </label>
+            </div>
+            <div class="btn_next" align="center">
+                <input type="submit" class="btn btn-primary btn-lg" name="to_choose_team" value="NEXT" >
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
