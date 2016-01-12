@@ -16,6 +16,8 @@ matches.db
 
 # logging
 team-pls-debug.log
+cron.log
+cron-team.sh
 
 ## ST2 GITIGNORE ##
 # cache files for sublime text
