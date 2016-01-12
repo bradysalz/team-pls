@@ -16,7 +16,7 @@ base_url = 'https://na.api.pvp.net/api/lol/na/'
 url_key = {'api_key': API_KEY}
 
 # logging info
-logging.basicConfig(filename='team-pls-debug.log')
+logging.basicConfig(filename='team-pls-debug.log', level=logging.DEBUG)
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
@@ -102,6 +102,7 @@ def add_to_db(game_data, summ_id):
 if __name__ == '__main__':
     if test_get_recent_matches:
         for x in [169964, 19908711, 20294405, 26658116]:
+            logging.debug('Checking summoner {0}'.format(x))
             check_recent_matches(x)
             time.sleep(5)
 
