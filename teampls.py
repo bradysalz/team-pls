@@ -1,6 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_, func
 from flask import Flask, render_template, url_for, request, redirect, session
 from keys import summoner_names, SECRET_KEY
+
+import time
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///matches.db'
@@ -8,6 +11,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = SECRET_KEY
 
 db = SQLAlchemy(app)
+
+# need this after db to stop circular imports
+import models
 
 
 @app.route('/', methods=['POST', 'GET'])
@@ -30,7 +36,6 @@ def choose_team():
         if sel is None:
             return 'GET with no data'
         else:
-            print sel
             team = summoner_names.keys()
             team.remove(sel.title())
             return render_template('not-team.html', team=team)
@@ -45,10 +50,12 @@ def choose_team():
             if request.form.get(t) == 'on':
                 queued.append(t)
 
-        queued = ','.join(queued)
+        # queued = ','.join(queued)
         session['queued'] = queued
 
-        return redirect(url_for('big_data', summ=sel, team=queued))
+        # TODO: If queued is none, redirect to choose team
+        # shouldn't be able to choose null-team
+        return redirect(url_for('big_data'))
 
 
 @app.route('/big-data', methods=['POST', 'GET'])
@@ -62,11 +69,152 @@ def big_data():
         return redirect(url_for('plot_team'))
 
 
-@app.route('/plot-team')
+@app.route('/plot-team', methods=['POST', 'GET'])
 def plot_team():
     """HOW MUCH TEAM"""
+    # TODO Make plot interface
+    # TODO Filter so it's only summoner's rift
+    # TODO Filter so it's games without team vs games with (currently all games vs with team)
+    # TODO Lots of checking for empty lists (uses list[0] a lot without checking)
+    if request.method == 'GET':
+        team_names = [summoner_names[session['summ']]]
+        for member in session['queued']:
+            team_names.append(summoner_names[member])
 
-    return '\n\n'.join(session.values())
+        print 'Team Names:'
+        print team_names, '\n'
+
+        # get list of games that individual has played
+        summ_game_list = db.session.query(models.MatchResult.date,
+                                          models.MatchResult.match,
+                                          models.MatchResult.summoner,
+                                          select_to_tbl_col())\
+            .filter(models.MatchResult.summoner == summoner_names[session['summ']])\
+            .all()
+
+        data_summ = [game[3] for game in summ_game_list]
+
+        if type(data_summ[0]) is bool:
+            data_summ = [1 if win else 0 for win in data_summ]
+
+        avg_summ_data = sum(data_summ)/float(len(data_summ))
+
+        # get game ids that team has played
+        team_id_list = db.session.query(models.MatchResult.match,
+                                        models.MatchResult.summoner,
+                                        func.count(models.MatchResult.match))\
+            .filter(models.MatchResult.summoner.in_(team_names))\
+            .group_by(models.MatchResult.match)\
+            .having(func.count(models.MatchResult.match) == len(team_names))\
+            .all()
+
+        # returns a tuple (id, summ, cnt), this removes cnt
+        team_id_list = set([team_id[0] for team_id in team_id_list])
+        print 'Team ID List:'
+        print team_id_list, '\n'
+
+        # get list of games that team has played
+        # list of tuples in form (date, match, summoner, data)
+        games_with_team = [game for game in summ_game_list if game[1] in team_id_list]
+
+        # get info from valid games
+        dates_with_team = [game[0] for game in games_with_team]
+        data_with_team = [game[3] for game in games_with_team]
+
+        if type(data_with_team[0]) is bool:
+            data_with_team = [1 if win else 0 for win in data_with_team]
+
+        avg_team_data = sum(data_with_team)/float(len(data_with_team))
+        print data_with_team, avg_team_data
+
+        str_data = column_to_string(data_with_team) # need later for CSVs
+
+        phrase = phrase_lookup(session['data_choice'], avg_summ_data, avg_team_data)
+        print games_with_team
+
+        return render_template('plot-team.html', phrase=phrase)
+
+    if request.method == 'POST':
+        if 'back' in request.form.keys():
+            return redirect(url_for('big_data'))
+
+        elif 'restart' in request.form.keys():
+            return redirect(url_for('who_is_champ'))
+
+        else:
+            return 'sick you broke it'
+
+
+def phrase_lookup(data_type, summ_avg, team_avg):
+    """Generate string that for summoner vs team comparisons
+    win <x> more/less games
+    earn <x> more/less gold
+    place <x> more/less wards
+    do <x> more/less damage
+    get <x> more/less kills/deaths/assists/gold
+    :param data_type: MatchResult.<what> -> DB Column
+    :param summ_avg: average of summoner data in games without team
+    :param team_avg: average of summoner data in games with team
+    :return phrase: string sentence that represents the data (You do 1.7
+    """
+    if data_type == "wins":
+        phrase = 'You get'
+    elif data_type == "gold":
+        phrase = 'You earn'
+    elif data_type == "wards":
+        phrase = 'You place'
+    elif data_type == "damage":
+        phrase = 'You do'
+    else:
+        phrase = 'You get'
+
+    if summ_avg >= team_avg:
+        percent_diff = 100*0.5*(summ_avg-team_avg)/(team_avg+summ_avg)
+        phrase += ' {0:.2}%'.format(percent_diff)
+        phrase += ' less'
+    else:
+        percent_diff = 100*0.5*(team_avg-summ_avg)/(team_avg+summ_avg)
+        phrase += ' {0:.2}%'.format(percent_diff)
+        phrase += ' more'
+
+    phrase += ' ' + data_type + ' with team'
+
+    return phrase
+
+
+def column_to_string(column):
+    """Converts list of column data to list of strings for plotting
+    :param column: column from DB, a list of data
+    :return output_str: converts column to str
+    """
+    if type(column[0]) == bool:
+        output_str = ['1' if item else '0' for item in column]
+    elif type(column[0]) == int:
+        output_str = [str(item) for item in column]
+    elif type(column[0]) == str or type(column[0]) == unicode:
+        output_str = column
+    return output_str
+
+
+def select_to_tbl_col():
+    """Converts stored select option to DB column for queries
+    :return MatchResult.Column:
+    """
+    val = session['data_choice']
+    if val == "wins":
+        return models.MatchResult.win_game
+    elif val == "kills":
+        return models.MatchResult.kills
+    elif val == "deaths":
+        return models.MatchResult.deaths
+    elif val == "assists":
+        return models.MatchResult.assists
+    elif val == "damage":
+        return models.MatchResult.damage
+    elif val == "gold":
+        return models.MatchResult.gold
+    elif val == "wards":
+        return models.MatchResult.wards
 
 
 if __name__ == '__main__':

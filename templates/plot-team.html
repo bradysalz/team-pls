@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block body %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.12/d3.min.js"></script>
+<div class=page>
+    <div class="vert">
+        <h1 align="center">
+            PLAY WITH TEAM?
+        </h1>
+        <h3 align="center">
+            {{ phrase }}
+        </h3>
+        <form class="form-inline" method="POST" action="/plot-team">
+            <div class="btn_next" align="center">
+                <input type="submit" class="btn btn-primary btn-lg" name="back" value="BACK" >
+            </div>
+            <div class="btn_next" align="center">
+                <input type="submit" class="btn btn-primary btn-lg" name="restart" value="RESTART" >
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
