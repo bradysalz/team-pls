@@ -3,7 +3,7 @@ from sqlalchemy import or_, func
 from flask import Flask, render_template, url_for, request, redirect, session
 from keys import summoner_names, SECRET_KEY
 
-import time
+import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///matches.db'
@@ -81,37 +81,25 @@ def plot_team():
         for member in session['queued']:
             team_names.append(summoner_names[member])
 
-        print 'Team Names:'
-        print team_names, '\n'
-
         # get list of games that individual has played
         summ_game_list = db.session.query(models.MatchResult.date,
                                           models.MatchResult.match,
                                           models.MatchResult.summoner,
-                                          select_to_tbl_col())\
-            .filter(models.MatchResult.summoner == summoner_names[session['summ']])\
+                                          select_to_tbl_col()) \
+            .filter(models.MatchResult.summoner == summoner_names[session['summ']]) \
             .all()
-
-        data_summ = [game[3] for game in summ_game_list]
-
-        if type(data_summ[0]) is bool:
-            data_summ = [1 if win else 0 for win in data_summ]
-
-        avg_summ_data = sum(data_summ)/float(len(data_summ))
 
         # get game ids that team has played
         team_id_list = db.session.query(models.MatchResult.match,
                                         models.MatchResult.summoner,
-                                        func.count(models.MatchResult.match))\
-            .filter(models.MatchResult.summoner.in_(team_names))\
-            .group_by(models.MatchResult.match)\
-            .having(func.count(models.MatchResult.match) == len(team_names))\
+                                        func.count(models.MatchResult.match)) \
+            .filter(models.MatchResult.summoner.in_(team_names)) \
+            .group_by(models.MatchResult.match) \
+            .having(func.count(models.MatchResult.match) == len(team_names)) \
             .all()
 
         # returns a tuple (id, summ, cnt), this removes cnt
         team_id_list = set([team_id[0] for team_id in team_id_list])
-        print 'Team ID List:'
-        print team_id_list, '\n'
 
         # get list of games that team has played
         # list of tuples in form (date, match, summoner, data)
@@ -121,18 +109,42 @@ def plot_team():
         dates_with_team = [game[0] for game in games_with_team]
         data_with_team = [game[3] for game in games_with_team]
 
+        # only non numeric option
+        # assumes data_with_team has len>0, not ideal
         if type(data_with_team[0]) is bool:
             data_with_team = [1 if win else 0 for win in data_with_team]
 
         avg_team_data = sum(data_with_team)/float(len(data_with_team))
-        print data_with_team, avg_team_data
 
-        str_data = column_to_string(data_with_team) # need later for CSVs
+        # get list of games without team and parse
+        # same as above
+        games_without_team = [game for game in summ_game_list if game[1] not in team_id_list]
 
-        phrase = phrase_lookup(session['data_choice'], avg_summ_data, avg_team_data)
-        print games_with_team
+        # get info from valid games
+        dates_without_team = [game[0] for game in games_without_team]
+        data_without_team = [game[3] for game in games_without_team]
 
-        return render_template('plot-team.html', phrase=phrase)
+        if type(data_without_team[0]) is bool:
+            data_without_team = [1 if win else 0 for win in data_without_team]
+
+        avg_no_team_data = sum(data_without_team)/float(len(data_without_team))
+        # print data_without_team, avg_no_team_data
+
+        phrase = phrase_lookup(session['data_choice'], avg_no_team_data, avg_team_data)
+
+        team_str_data = ','.join(column_to_string(data_with_team))
+        no_team_str_data = ','.join(column_to_string(data_without_team))
+
+        team_str_time = ','.join(datetime_to_string(dates_with_team))
+        no_team_str_time = ','.join(datetime_to_string(dates_without_team))
+
+        print team_str_time
+        print team_str_data
+        return render_template('plot-team.html', phrase=phrase,
+                               team_data=team_str_data,
+                               team_time=team_str_time,
+                               no_team_data=no_team_str_data,
+                               no_team_time=no_team_str_time)
 
     if request.method == 'POST':
         if 'back' in request.form.keys():
@@ -143,6 +155,14 @@ def plot_team():
 
         else:
             return 'sick you broke it'
+
+
+def datetime_to_string(dt_list):
+    """Converts list of datetimes to list of strings
+    :param dt_list: list of datetimes
+    :return :
+    """
+    return ["'" + dt.strftime('%m/%d/%y %H:%M') + "'" for dt in dt_list]
 
 
 def phrase_lookup(data_type, summ_avg, team_avg):
@@ -170,15 +190,16 @@ def phrase_lookup(data_type, summ_avg, team_avg):
 
     if summ_avg >= team_avg:
         percent_diff = 100*0.5*(summ_avg-team_avg)/(team_avg+summ_avg)
-        phrase += ' {0:.2}%'.format(percent_diff)
+        phrase += ' {:.1f}%'.format(percent_diff)
         phrase += ' less'
     else:
         percent_diff = 100*0.5*(team_avg-summ_avg)/(team_avg+summ_avg)
-        phrase += ' {0:.2}%'.format(percent_diff)
+        phrase += ' {:.1f}%'.format(percent_diff)
         phrase += ' more'
 
     phrase += ' ' + data_type + ' with team'
 
+    print phrase
     return phrase
 
 

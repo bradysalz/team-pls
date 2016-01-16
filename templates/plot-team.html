@@ -10,6 +10,60 @@
         <h3 align="center">
             {{ phrase }}
         </h3>
+        <div>
+            <div class="col-md-1"></div>
+            <div class="col-md-1"></div>
+            <div class="col-md-8">
+                <div align="center" id="teamchart"></div>
+                <div align="center" id="noteamchart"></div>
+            </div>
+            <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js"></script>
+            <script>
+                var chart = c3.generate({
+                    bindto: '#noteamchart',
+                    data: {
+                        x:'noteamtime',
+                        xFormat: '%m/%d/%y %H:%M', // 1/23/2016 5:42
+                        columns: [
+                            ['noteamtime', {{ no_team_time|safe }}],
+                            ['noteam', {{ no_team_data }}],
+
+                        ]
+                    },
+                    axis: {
+                        x: {
+                            type: 'timeseries',
+                            tick: {
+                                format: '%m/%d/%y %H:%M'
+                            }
+                        }
+                    }
+                });
+                var teamchart = c3.generate({
+                    bindto: '#teamchart',
+                    data: {
+                        x: 'teamtime',
+                        xFormat: '%m/%d/%y %H:%M', // 1/23/2016 5:42
+                        columns: [
+                            ['teamtime', {{ team_time|safe }}],
+                            ['team', {{ team_data }}]
+                        ]
+                    },
+                    axis: {
+                        x: {
+                            type: 'timeseries',
+                            tick: {
+                                format: '%m/%d/%y %H:%M'
+                            }
+                        }
+                    }
+                });
+            </script>
+            <div class="col-md-1"></div>
+            <div class="col-md-1"></div>
+        </div>
         <form class="form-inline" method="POST" action="/plot-team">
             <div class="btn_next" align="center">
                 <input type="submit" class="btn btn-primary btn-lg" name="back" value="BACK" >
