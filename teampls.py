@@ -72,7 +72,6 @@ def big_data():
 @app.route('/plot-team', methods=['POST', 'GET'])
 def plot_team():
     """HOW MUCH TEAM"""
-    # TODO Make plot interface
     # TODO Filter so it's only summoner's rift
     # TODO Filter so it's games without team vs games with (currently all games vs with team)
     # TODO Lots of checking for empty lists (uses list[0] a lot without checking)
