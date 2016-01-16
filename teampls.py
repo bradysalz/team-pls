@@ -53,8 +53,8 @@ def choose_team():
         # queued = ','.join(queued)
         session['queued'] = queued
 
-        # TODO: If queued is none, redirect to choose team
-        # shouldn't be able to choose null-team
+        if queued is None:
+            return redirect(url_for('choose_team'))
         return redirect(url_for('big_data'))
 
 
