@@ -53,7 +53,7 @@ def choose_team():
         # queued = ','.join(queued)
         session['queued'] = queued
 
-        if queued is None:
+        if queued is []:
             return redirect(url_for('choose_team'))
         return redirect(url_for('big_data'))
 
