@@ -14,64 +14,98 @@
             <div class="col-md-1"></div>
             <div class="col-md-1"></div>
             <div class="col-md-8">
-                <div align="center" id="teamchart" style="margin: 20px"></div>
-                <div align="center" id="noteamchart"></div>
+                <div align="center" id="teamchart" style="margin: 0px"></div>
+                <div>&nbsp; &nbsp; </div>
+                <div align="center" id="noteamchart" style="margin: 0px"></div>
             </div>
             <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js"></script>
             <script>
-                var chart = c3.generate({
+                {% if type == 'time'%}
+                    var chart = c3.generate({
                     bindto: '#noteamchart',
-                    data: {
-                        x:'noteamtime',
-                        xFormat: '%m/%d/%y %H:%M', // 1/23/2016 5:42
-                        columns: [
-                            ['noteamtime', {{ no_team_time|safe }}],
-                            ['noteam', {{ no_team_data }}],
-
-                        ]
-                    },
-                    axis: {
-                        x: {
-                            type: 'timeseries',
-                            tick: {
-                                format: '%m/%d'
+                        data: {
+                            x:'noteamtime',
+                            xFormat: '%m/%d/%y %H:%M', // 1/23/2016 5:42
+                            columns: [
+                                ['noteamtime', {{ no_team_time|safe }}],
+                                ['noteam', {{ no_team_data }}]
+                            ]
+                        },
+                        axis: {
+                            x: {
+                                type: 'timeseries',
+                                tick: {
+                                    format: '%m/%d',
+    {#                                fit: true,#}
+                                    rotate: -45
+                                },
+                                label: 'Date'
                             }
                         }
-                    }
-                });
-                var teamchart = c3.generate({
-                    bindto: '#teamchart',
-                    data: {
-                        x: 'teamtime',
-                        xFormat: '%m/%d/%y %H:%M', // 1/23/2016 5:42
-                        columns: [
-                            ['teamtime', {{ team_time|safe }}],
-                            ['team', {{ team_data }}]
-                        ]
-                    },
-                    axis: {
-                        x: {
-                            type: 'timeseries',
-                            tick: {
-                                format: '%m/%d/%y %H:%M'
+                    });
+                    var teamchart = c3.generate({
+                        bindto: '#teamchart',
+                        data: {
+                            x: 'teamtime',
+                            xFormat: '%m/%d/%y %H:%M', // 1/23/2016 5:42
+                            columns: [
+                                ['teamtime', {{ team_time|safe }}],
+                                ['team', {{ team_data }}]
+                            ]
+                        },
+                        axis: {
+                            x: {
+                                type: 'timeseries',
+                                tick: {
+                                    format: '%m/%d',
+    {#                                fit: true,#}
+                                    rotate: -45
+                                },
+                                label: 'Date'
                             }
                         }
-                    }
-                });
+                    });
+                {% else %}
+                    var chart = c3.generate({
+                        bindto: '#noteamchart',
+                        data: {
+                            columns: [
+                                ['no team', {{ no_team_cnt }}],
+                                ['team', {{ team_cnt }}]
+                            ],
+                            type: 'bar'
+                        },
+                        axis: {
+                            x: {
+                                type: 'category',
+                                categories: [{{ bar_bins }}]
+                            }
+                        },
+                        bar: {
+                            width: {
+                                ratio: 0.5 // this makes bar width 50% of length between ticks
+                            }
+                            // or
+                            //width: 100 // this makes bar width 100px
+                        }
+                    });
+                {% endif %}
             </script>
+
+            <form class="form-inline" method="POST" action="/plot-team">
+                <div class="btn_next" align="center">
+                    <input type="submit" class="btn btn-primary btn-lg" name="back" value="BACK" >
+                </div>
+                <div class="btn_next" align="center">
+                    <input type="submit" class="btn btn-primary btn-lg" name="restart" value="RESTART" >
+                </div>
+            </form>
+            </div>
             <div class="col-md-1"></div>
             <div class="col-md-1"></div>
-        </div>
-        <form class="form-inline" method="POST" action="/plot-team">
-            <div class="btn_next" align="center">
-                <input type="submit" class="btn btn-primary btn-lg" name="back" value="BACK" >
             </div>
-            <div class="btn_next" align="center">
-                <input type="submit" class="btn btn-primary btn-lg" name="restart" value="RESTART" >
-            </div>
-        </form>
     </div>
 </div>
 {% endblock %}

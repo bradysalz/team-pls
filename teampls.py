@@ -1,9 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, func
 from flask import Flask, render_template, url_for, request, redirect, session
-from keys import summoner_names, SECRET_KEY
+from keys import summoner_names, SECRET_KEY, my_port, debug_status
 
-import datetime
+import numpy as np
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///matches.db'
@@ -66,6 +66,7 @@ def big_data():
 
     if request.method == 'POST':
         session['data_choice'] = request.form['top_data']
+        session['graph_choice'] = request.form['bar_time']
         return redirect(url_for('plot_team'))
 
 
@@ -127,7 +128,6 @@ def plot_team():
             data_without_team = [1 if win else 0 for win in data_without_team]
 
         avg_no_team_data = sum(data_without_team)/float(len(data_without_team))
-        # print data_without_team, avg_no_team_data
 
         phrase = phrase_lookup(session['data_choice'], avg_no_team_data, avg_team_data)
 
@@ -137,13 +137,27 @@ def plot_team():
         team_str_time = ','.join(datetime_to_string(dates_with_team))
         no_team_str_time = ','.join(datetime_to_string(dates_without_team))
 
-        print team_str_time
-        print team_str_data
+        team_cnt, team_bins = binning_data(session['data_choice'], data_with_team)
+        no_team_cnt, no_team_bins = binning_data(session['data_choice'], data_without_team)
+
+        team_bins_str = ','.join([str(pt) for pt in team_bins])
+        team_cnt_str = ','.join([str(pt) for pt in team_cnt])
+        no_team_cnt_str = ','.join([str(pt) for pt in no_team_cnt])
+
+        print team_bins_str
+        print team_cnt_str
+        print session['graph_choice']
         return render_template('plot-team.html', phrase=phrase,
-                               team_data=team_str_data,
                                team_time=team_str_time,
+                               team_data=team_str_data,
+                               avg_team=avg_team_data,
+                               no_team_time=no_team_str_time,
                                no_team_data=no_team_str_data,
-                               no_team_time=no_team_str_time)
+                               avg_no_team=avg_no_team_data,
+                               bar_bins=team_bins_str,
+                               no_team_cnt = no_team_cnt_str,
+                               team_cnt = team_cnt_str,
+                               type=session['graph_choice'])
 
     if request.method == 'POST':
         if 'back' in request.form.keys():
@@ -162,6 +176,31 @@ def datetime_to_string(dt_list):
     :return :
     """
     return ["'" + dt.strftime('%m/%d/%y %H:%M') + "'" for dt in dt_list]
+
+
+def binning_data(data_type, data_row):
+    """Makes histograms of data
+    :param data_type: data row type
+    :param data_row: list of data points
+    :return: [[CNT], [BINS]]
+    """
+    if data_type in ['kills', 'deaths', 'assists']:
+        endpt = 15
+        cnt = 1
+    elif data_type == 'wins':
+        wins = sum(data_row)
+        return [[wins, len(data_row) - wins], [0,1]]
+    elif data_type == 'wards':
+        endpt = 30
+        cnt = 2
+    elif data_type == 'gold':
+        endpt = 20e3
+        cnt = 2e3
+    else:
+        endpt = 50e3
+        cnt = 5e3
+
+    return np.histogram(data_row, np.arange(endpt, step=cnt))
 
 
 def phrase_lookup(data_type, summ_avg, team_avg):
@@ -198,7 +237,6 @@ def phrase_lookup(data_type, summ_avg, team_avg):
 
     phrase += ' ' + data_type + ' with team'
 
-    print phrase
     return phrase
 
 
@@ -238,4 +276,4 @@ def select_to_tbl_col():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=debug_status, port=my_port)
