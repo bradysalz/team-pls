@@ -81,6 +81,35 @@
                             x: {
                                 type: 'category',
                                 categories: [{{ bar_bins }}]
+                            },
+                            y: {
+                                label: 'Raw Count'
+                            }
+                        },
+                        bar: {
+                            width: {
+                                ratio: 0.5 // this makes bar width 50% of length between ticks
+                            }
+                            // or
+                            //width: 100 // this makes bar width 100px
+                        }
+                    });
+                    var chart = c3.generate({
+                        bindto: '#teamchart',
+                        data: {
+                            columns: [
+                                ['no team', {{ no_team_cnt_nrml }}],
+                                ['team', {{ team_cnt_nrml }}]
+                            ],
+                            type: 'bar'
+                        },
+                        axis: {
+                            x: {
+                                type: 'category',
+                                categories: [{{ bar_bins }}]
+                            },
+                            y: {
+                                label: 'Normalized Count (Percent)'
                             }
                         },
                         bar: {

@@ -144,9 +144,13 @@ def plot_team():
         team_cnt_str = ','.join([str(pt) for pt in team_cnt])
         no_team_cnt_str = ','.join([str(pt) for pt in no_team_cnt])
 
-        print team_bins_str
-        print team_cnt_str
-        print session['graph_choice']
+        # normalized data
+        team_cnt_nrml = [100.0*pt/len(data_with_team) for pt in team_cnt]
+        no_team_cnt_nrml = [100.0*pt/len(data_without_team) for pt in no_team_cnt]
+
+        team_cnt_nrml_str = ','.join([str(pt) for pt in team_cnt_nrml])
+        no_team_cnt_nrml_str = ','.join([str(pt) for pt in no_team_cnt_nrml])
+
         return render_template('plot-team.html', phrase=phrase,
                                team_time=team_str_time,
                                team_data=team_str_data,
@@ -157,6 +161,8 @@ def plot_team():
                                bar_bins=team_bins_str,
                                no_team_cnt = no_team_cnt_str,
                                team_cnt = team_cnt_str,
+                               team_cnt_nrml = team_cnt_nrml_str,
+                               no_team_cnt_nrml = no_team_cnt_nrml_str,
                                type=session['graph_choice'])
 
     if request.method == 'POST':
